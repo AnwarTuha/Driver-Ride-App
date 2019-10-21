@@ -3,6 +3,7 @@ package com.anx.application.jdriver;
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
+import android.widget.Toast;
 
 import com.firebase.geofire.GeoFire;
 import com.google.firebase.auth.FirebaseAuth;
@@ -29,7 +30,7 @@ public class onAppKilled  extends Service {
         geoFireAvailable.removeLocation(userId, new GeoFire.CompletionListener() {
             @Override
             public void onComplete(String key, DatabaseError error) {
-
+                Toast.makeText(onAppKilled.this, "App Killed", Toast.LENGTH_SHORT).show();
             }
         });
     }

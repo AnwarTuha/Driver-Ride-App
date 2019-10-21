@@ -46,18 +46,13 @@
         <RadioButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="JanoTaxi"
-            android:id="@+id/janoTaxi"/>
+            android:text="Bajjaj"
+            android:id="@+id/bajjaj"/>
         <RadioButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="JanoVan"
-            android:id="@+id/janoVan"/>
-        <RadioButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="JanoCorporate"
-            android:id="@+id/janoCorporate"/>
+            android:text="Taxi"
+            android:id="@+id/taxi"/>
 
     </RadioGroup>
 

@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_height="match_parent"
     android:layout_width="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".DriverMapActivity">
 
     <fragment
@@ -16,7 +17,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
-
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
@@ -40,13 +40,31 @@
                 android:id="@+id/settings"
                 android:text="Settings"/>
         </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
-        <Switch
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Working"
-            android:layout_margin="10sp"
-            android:id="@+id/workingSwitch"/>
+            <Switch
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="Working"
+                android:layout_margin="10sp"
+                android:id="@+id/workingSwitch"
+                android:thumb="@drawable/thumb_selector"
+                app:track="@drawable/track_selector"
+                android:layout_weight="1"/>
+            <TextView
+                android:background="@android:color/white"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Quota"
+                android:textColor="@android:color/black"
+                android:id="@+id/driverQuota"
+                android:textSize="15sp"
+                android:layout_weight="1"
+                android:layout_margin="10sp"/>
+
+        </LinearLayout>
     </LinearLayout>
 
     <LinearLayout
@@ -78,28 +96,72 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:id="@+id/customerDestination"
-                    android:paddingTop="10sp"
-                    android:paddingBottom="10sp"
+                    android:paddingBottom="5sp"
                     android:textColor="@android:color/black"
                     android:text="Destination: --"/>
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:id="@+id/ridePrice"
+                    android:paddingTop="5sp"
+                    android:paddingBottom="5sp"
+                    android:textColor="@android:color/black"
+                    android:text="Ride Cost (+ starting price): --"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:id="@+id/customerName"
-                    android:paddingBottom="10sp"
+                    android:paddingBottom="5sp"
                     android:textColor="@android:color/black"/>
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:id="@+id/customerPhone"
-                    android:paddingBottom="10sp"
+                    android:paddingTop="5sp"
+                    android:paddingBottom="5sp"
                     android:textColor="@android:color/black"/>
             </LinearLayout>
         </LinearLayout>
-        <Button
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Picked Customer"
-            android:id="@+id/rideStatus"/>
+            android:orientation="horizontal">
+
+            <Button
+                android:layout_weight="1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Picked Customer"
+                android:id="@+id/rideStatus"/>
+
+            <Button
+                android:layout_weight="1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Call Customer"
+                android:id="@+id/callCustomer"/>
+
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:layout_weight="1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Accept"
+                android:id="@+id/accept"
+                android:visibility="gone"/>
+            <Button
+                android:layout_weight="1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Decline"
+                android:visibility="gone"
+                android:id="@+id/decline"/>
+        </LinearLayout>
     </LinearLayout>
 </FrameLayout>

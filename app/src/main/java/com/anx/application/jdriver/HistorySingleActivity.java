@@ -48,6 +48,8 @@ import java.util.Map;
 public class HistorySingleActivity extends AppCompatActivity implements OnMapReadyCallback, RoutingListener {
 
     private String rideId, currentUserId, customerId, driverId, userDriverOrCustomer;
+    private String distance;
+    private Double ridePrice;
 
     private TextView rideLocation, rideDistance, rideDate, userName, userPhone;
     private ImageView userImage;
@@ -112,6 +114,10 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
                         }
                         if (child.getKey().equals("rating")){
                             mRatingBar.setRating(Integer.valueOf(child.getValue().toString()));
+                        }
+                        if (child.getKey().equals("distance")){
+                            distance = child.getValue().toString();
+                            rideDistance.setText("Traveled distance: "+ distance);
                         }
                         if (child.getKey().equals("destination")){
                             rideLocation.setText("Destination: " + child.getValue().toString());
