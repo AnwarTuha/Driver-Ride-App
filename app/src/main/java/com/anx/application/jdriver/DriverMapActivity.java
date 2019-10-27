@@ -1,8 +1,12 @@
 package com.anx.application.jdriver;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
@@ -18,6 +22,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
@@ -52,6 +57,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -61,6 +67,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.suke.widget.SwitchButton;
 
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
@@ -71,7 +78,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class DriverMapActivity extends FragmentActivity implements RoutingListener, OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback {
+public class DriverMapActivity extends AppCompatActivity implements RoutingListener, OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback, NavigationView.OnNavigationItemSelectedListener {
 
 
     private static final int[] COLORS = new int[]{R.color.colorPrimaryDark};
@@ -93,12 +100,18 @@ public class DriverMapActivity extends FragmentActivity implements RoutingListen
     private ImageView mCustomerProfileImage;
     private LinearLayout mCustomerInfo;
     private TextView mCustomerName, mCustomerPhone, mCustomerDestination, mDriverQuota, mRideCost;
-    private Switch mWorkingSwitch;
+    //private Switch mWorkingSwitch;
     private DatabaseReference assignedCustomerPickupLocationRef;
     private ValueEventListener assignedCustomerPickupLocationRefListener;
     private String serviceType, currentDriver, quotaReference;
     private double newQuota;
     private int COMPANY_CUT_GIVEN = 0;
+    private com.suke.widget.SwitchButton mWorkingSwitch;
+    private DrawerLayout drawer;
+    private boolean cameraSet = false;
+    private TextView mPhoneNumber, mFullName;
+    private ImageView mProfileImage;
+    private TextView mService;
     LocationCallback mLocationCallback = new LocationCallback() {
         @SuppressLint("SetTextI18n")
         @Override
@@ -114,8 +127,10 @@ public class DriverMapActivity extends FragmentActivity implements RoutingListen
                             Map<String, Object> driverMap = (Map<String, Object>) dataSnapshot.getValue();
                             if (driverMap.get("service").equals("Bajjaj")) {
                                 startingPrice = 15.00;
+                                mService.setText("Bajjaj");
                             } else if (driverMap.get("service").equals("Taxi")) {
                                 startingPrice = 40.00;
+                                mService.setText("Taxi");
                             } else {
                                 Toast.makeText(DriverMapActivity.this, "Driver service type not assigned yet", Toast.LENGTH_SHORT).show();
                             }
@@ -153,7 +168,7 @@ public class DriverMapActivity extends FragmentActivity implements RoutingListen
                     DecimalFormat df = new DecimalFormat("#.#");
                     df.setRoundingMode(RoundingMode.CEILING);
 
-                    rideDistance = Double.parseDouble(df.format(pickupLocation.distanceTo(destinationLocation)/1000));
+                    rideDistance = Double.parseDouble(df.format(pickupLocation.distanceTo(destinationLocation) / 1000));
 
                     RIDE_PRICE = (rideDistance * 13) + startingPrice;
 
@@ -168,10 +183,21 @@ public class DriverMapActivity extends FragmentActivity implements RoutingListen
                 }
 
                 mLastLocation = location;
-                LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+                final LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
                 Log.i("Hello", "Location Changed");
-                mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-                mMap.animateCamera(CameraUpdateFactory.zoomTo(15));
+                if (!cameraSet){
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
+                    cameraSet = true;
+                }
+
+                mMap.setOnMyLocationButtonClickListener(new GoogleMap.OnMyLocationButtonClickListener() {
+                    @Override
+                    public boolean onMyLocationButtonClick() {
+                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
+                        return true;
+                    }
+                });
+
 
                 String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
                 DatabaseReference refAvailable = FirebaseDatabase.getInstance().getReference("driversAvailable");
@@ -217,7 +243,7 @@ public class DriverMapActivity extends FragmentActivity implements RoutingListen
 
     private void provideCompanyCut() {
 
-        if (COMPANY_CUT_GIVEN == 0){
+        if (COMPANY_CUT_GIVEN == 0) {
             String key = FirebaseAuth.getInstance().getCurrentUser().getUid();
             final DatabaseReference quotaUpdateReference = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(key);
             quotaUpdateReference.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -255,6 +281,17 @@ public class DriverMapActivity extends FragmentActivity implements RoutingListen
 
         startService(new Intent(this, onAppKilled.class));
 
+        androidx.appcompat.widget.Toolbar toolbar = findViewById(R.id.toolBar);
+        setSupportActionBar(toolbar);
+
+        drawer = findViewById(R.id.drawer_layout);
+        NavigationView navigationView = findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.addDrawerListener(toggle);
+        toggle.syncState();
+
         mCustomerInfo = (LinearLayout) findViewById(R.id.customerInfo);
 
         mCustomerProfileImage = (ImageView) findViewById(R.id.customerProfileImage);
@@ -265,19 +302,35 @@ public class DriverMapActivity extends FragmentActivity implements RoutingListen
         mDriverQuota = (TextView) findViewById(R.id.driverQuota);
         mRideCost = (TextView) findViewById(R.id.ridePrice);
 
+        View v = navigationView.getHeaderView(0);
+        mFullName = v.findViewById(R.id.nav_name);
+        mPhoneNumber = v.findViewById(R.id.nav_phone);
+        mProfileImage = v.findViewById(R.id.profileImage);
+        mService = findViewById(R.id.serviceType);
 
-        mSetting = (Button) findViewById(R.id.settings);
+        getUserInformation();
+
+
+
+
         mRideStatus = (Button) findViewById(R.id.rideStatus);
-        mHistory = (Button) findViewById(R.id.history);
-        mAccept = (Button) findViewById(R.id.accept);
-        mDecline = (Button) findViewById(R.id.decline);
         mCallCustomer = (Button) findViewById(R.id.callCustomer);
 
-        mWorkingSwitch = findViewById(R.id.workingSwitch);
-
-        mWorkingSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        mCallCustomer.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+            public void onClick(View v) {
+                Intent callIntent = new Intent(Intent.ACTION_DIAL);
+                callIntent.setData(Uri.parse("tel:"+mCustomerPhone.getText().toString()));
+                startActivity(callIntent);
+            }
+        });
+
+//        mWorkingSwitch = findViewById(R.id.workingSwitch);
+        mWorkingSwitch = (com.suke.widget.SwitchButton) findViewById(R.id.workingSwitch);
+
+        mWorkingSwitch.setOnCheckedChangeListener(new SwitchButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(SwitchButton view, boolean isChecked) {
                 if (isChecked) {
                     connectDriver();
                     getDriverQuota();
@@ -286,7 +339,6 @@ public class DriverMapActivity extends FragmentActivity implements RoutingListen
                 }
             }
         });
-
         // display ride status
         mRideStatus.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -310,47 +362,48 @@ public class DriverMapActivity extends FragmentActivity implements RoutingListen
             }
         });
 
-        // Logout Driver
-        mLogout = findViewById(R.id.logout);
-        mLogout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                isLoggingOut = true;
-                disconnectDriver();
-                FirebaseAuth.getInstance().signOut();
-                Intent intent = new Intent(DriverMapActivity.this, MainActivity.class);
-                startActivity(intent);
-                finish();
-                return;
-            }
-        });
-
-        // Setting Driver
-        mSetting.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                isLoggingOut = true;
-                Intent intent = new Intent(DriverMapActivity.this, DriverSettingActivity.class);
-                startActivity(intent);
-                return;
-            }
-        });
-
-        // history of the driver
-        mHistory.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(DriverMapActivity.this, HistoryActivity.class);
-                intent.putExtra("customerOrDriver", "Drivers");
-                startActivity(intent);
-                return;
-            }
-        });
-
+        getDriverQuota();
         getAssignedCustomer();
     }
 
+    private void getUserInformation() {
+
+        final String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        DatabaseReference mCustomerDatabase = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(userId);
+        mCustomerDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists() && dataSnapshot.getChildrenCount() > 0) {
+                    Map<String, Object> map = (Map<String, Object>) dataSnapshot.getValue();
+                    if (map.get("name") != null) {
+                        mFullName.setText(map.get("name").toString());
+                        Toast.makeText(DriverMapActivity.this, ""+map.get("name"), Toast.LENGTH_SHORT).show();
+                    }
+                    if (map.get("phone") != null) {
+                        mPhoneNumber.setText(map.get("phone").toString());
+                    }
+                    if (map.get("profileImageUrl") != null) {
+                        StorageReference storageReference = FirebaseStorage.getInstance().getReference().child("profileImage").child(userId);
+                        storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                            @Override
+                            public void onSuccess(Uri uri) {
+                                Glide.with(getApplicationContext()).load(uri.toString()).error(R.drawable.ic_default_profile).into(mProfileImage);
+                            }
+                        });
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+            }
+        });
+
+    }
+
     private void getDriverQuota() {
+        final DecimalFormat df = new DecimalFormat("#.#");
+        df.setRoundingMode(RoundingMode.CEILING);
         String driverId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         DatabaseReference assignedCustomerRef = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(driverId).child("quota");
         assignedCustomerRef.addValueEventListener(new ValueEventListener() {
@@ -363,7 +416,7 @@ public class DriverMapActivity extends FragmentActivity implements RoutingListen
                         disconnectDriver();
                         mWorkingSwitch.setChecked(false);
                     } else {
-                        mDriverQuota.setText(quota + " birr");
+                        mDriverQuota.setText(df.format(quota) + " birr");
                     }
                 } else { // If there is no customer request
                     mDriverQuota.setText("Please visit local office to get quota");
@@ -378,6 +431,16 @@ public class DriverMapActivity extends FragmentActivity implements RoutingListen
         });
     }
 
+    private void logOut() {
+        isLoggingOut = true;
+        disconnectDriver();
+        FirebaseAuth.getInstance().signOut();
+        Intent intent = new Intent(DriverMapActivity.this, MainActivity.class);
+        startActivity(intent);
+        finish();
+        return;
+    }
+
     private void getAssignedCustomer() {
         String driverId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         DatabaseReference assignedCustomerRef = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(driverId).child("customerRequest").child("customerRideId");
@@ -385,6 +448,7 @@ public class DriverMapActivity extends FragmentActivity implements RoutingListen
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) { // If there is a customer request
+
                     status = 1;
                     customerId = dataSnapshot.getValue().toString();
                     getAssignedCustomerPickupLocation();
@@ -531,6 +595,8 @@ public class DriverMapActivity extends FragmentActivity implements RoutingListen
         customerId = "";
         rideDistance = 0;
 
+        mMap.clear();
+
         if (pickupMarker != null) {
             pickupMarker.remove();
         }
@@ -567,6 +633,7 @@ public class DriverMapActivity extends FragmentActivity implements RoutingListen
         map.put("location/to/lat", destinationLatLng.latitude);
         map.put("location/to/lng", destinationLatLng.longitude);
         map.put("distance", rideDistance);
+        map.put("fare", RIDE_PRICE);
         historyRef.child(rideId).updateChildren(map);
 
     }
@@ -643,6 +710,14 @@ public class DriverMapActivity extends FragmentActivity implements RoutingListen
         if (mFusedLocationClient != null) {
             mFusedLocationClient.removeLocationUpdates(mLocationCallback);
         }
+
+        if (pickupMarker != null) {
+            pickupMarker.remove();
+        }
+
+        if (assignedCustomerPickupLocationRefListener != null) {
+            assignedCustomerPickupLocationRef.removeEventListener(assignedCustomerPickupLocationRefListener);
+        }
         String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         DatabaseReference refAvailable = FirebaseDatabase.getInstance().getReference("driversAvailable");
         GeoFire geoFireAvailable = new GeoFire(refAvailable);
@@ -652,6 +727,8 @@ public class DriverMapActivity extends FragmentActivity implements RoutingListen
 
             }
         });
+
+
     }
 
     @Override
@@ -723,24 +800,55 @@ public class DriverMapActivity extends FragmentActivity implements RoutingListen
     }
 
     @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
+        Intent intent;
+        switch (menuItem.getItemId()) {
+            case R.id.nav_history:
+                intent = new Intent(DriverMapActivity.this, HistoryActivity.class);
+                intent.putExtra("customerOrDriver", "Customers");
+                startActivity(intent);
+                break;
+            case R.id.nav_profile:
+                intent = new Intent(DriverMapActivity.this, DriverSettingActivity.class);
+                startActivity(intent);
+                break;
+            case R.id.nav_logout:
+                logOut();
+                break;
+            case R.id.nav_callus:
+                Toast.makeText(this, "Call Us", Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.nav_email:
+                Toast.makeText(this, "Email Us", Toast.LENGTH_SHORT).show();
+                break;
+        }
+
+        drawer.closeDrawer(GravityCompat.START);
+        return true;
+    }
+
+    @Override
     public void onBackPressed() {
 
-        new AlertDialog.Builder(this)
-                .setMessage("Do you want the app to run in the background?")
-                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        DriverMapActivity.super.onBackPressed();
-                        getAssignedCustomer();
-                    }
-                })
-                .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        DriverMapActivity.super.onBackPressed();
-                        mWorkingSwitch.setChecked(false);
-                    }
-                })
-                .show();
+        if (mWorkingSwitch.isChecked()) {
+            new AlertDialog.Builder(this)
+                    .setMessage("Do you want the app to run in the background?")
+                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            moveTaskToBack(true);
+                        }
+                    })
+                    .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            DriverMapActivity.super.onBackPressed();
+                            mWorkingSwitch.setChecked(false);
+                        }
+                    })
+                    .show();
+        } else {
+            super.onBackPressed();
+        }
     }
 }

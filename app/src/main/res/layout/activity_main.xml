@@ -1,33 +1,234 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity"
-    android:orientation="vertical"
-    android:padding="20sp"
-    android:gravity="center">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".MainActivity">
 
-    <EditText
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/bgHeader"
         android:layout_width="match_parent"
+        android:layout_height="220dp"
+        android:elevation="5dp"
+        android:background="@drawable/header_login"/>
+
+    <TextView
+        android:id="@+id/tvDesc"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:hint="email"
-        android:layout_marginBottom="20sp"
-        android:id="@+id/email"/>
-    <EditText
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="password"
-        android:layout_marginBottom="20sp"
-        android:id="@+id/password"/>
-    <Button
-        android:layout_width="match_parent"
+        android:text="Welcome To Pick Me!(driver)"
+        android:elevation="5dp"
+        android:layout_marginTop="40dp"
+        android:layout_marginLeft="30dp"
+        android:textSize="17sp"
+        android:textColor="@color/colorWhite" />
+
+
+    <TextView
+        android:id="@+id/tvLogin"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Login"
-        android:id="@+id/login"/>
-    <Button
+        android:elevation="5dp"
+        android:layout_below="@+id/tvDesc"
+        android:transitionName="tvLogin"
+        android:layout_alignLeft="@+id/tvDesc"
+        android:textStyle="bold"
+        android:textSize="30sp"
+        android:textColor="@color/colorWhite" />
+
+    <ImageView
+        android:id="@+id/circle1"
+        android:layout_width="134dp"
+        android:layout_height="134dp"
+        android:layout_below="@id/bgHeader"
+        android:src="@drawable/circletransparant"
+        android:layout_marginTop="-80dp"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="-100dp"/>
+
+    <ImageView
+        android:id="@+id/circle2"
+        android:layout_width="134dp"
+        android:layout_height="134dp"
+        android:src="@drawable/circletransparant"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="50dp"
+        android:layout_marginLeft="-100dp"/>
+
+    <ImageView
+        android:id="@+id/circle3"
+        android:layout_width="182dp"
+        android:layout_height="182dp"
+        android:src="@drawable/circle"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="-80dp"
+        android:layout_marginBottom="-30dp"/>
+
+    <ImageView
+        android:id="@+id/circle4"
+        android:layout_width="134dp"
+        android:layout_height="134dp"
+        android:layout_toLeftOf="@+id/circle3"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="-50dp"
+        android:layout_marginRight="-50dp"
+        android:src="@drawable/circletransparant"/>
+
+
+    <ScrollView
+        android:id="@+id/sv"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Join"
-        android:id="@+id/register"/>
-</LinearLayout>
+        android:layout_height="match_parent"
+        android:layout_below="@+id/bgHeader">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="45dp">
+
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cv"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:cardCornerRadius="10dp"
+                android:layout_margin="20dp"
+                app:cardElevation="4dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingBottom="50dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Phone"
+                        android:layout_margin="10dp"
+                        android:textStyle="bold"
+                        android:textColor="#2193b0"
+                        android:textSize="14sp"/>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp">
+
+                        <com.hbb20.CountryCodePicker
+                            android:id="@+id/ccp"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            app:ccp_textSize="16sp"
+                            app:ccp_autoDetectCountry="true"
+                            app:ccp_showFlag="true"
+                            app:ccp_showPhoneCode="true"
+                            app:ccp_showNameCode="false"/>
+
+                        <EditText
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="2"
+                            android:inputType="phone"
+                            android:layout_marginLeft="10dp"
+                            android:layout_marginRight="10dp"
+                            android:hint="Phone number"
+                            android:textSize="16sp"
+                            android:id="@+id/phone"
+                            android:maxLength="10"/>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/cv"
+                android:layout_alignLeft="@+id/cv"
+                android:layout_alignRight="@+id/cv"
+                android:elevation="10dp"
+                android:layout_marginTop="-50dp"
+                android:layout_marginLeft="35dp"
+                android:layout_marginRight="35dp">
+                <RelativeLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <Button
+                        android:id="@+id/login"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:elevation="10dp"
+                        android:text="Login"
+                        android:textAllCaps="false"
+                        android:layout_alignParentBottom="true"
+                        android:textColor="@color/colorWhite"
+                        android:background="@drawable/bg_ui"/>
+
+                    <ProgressBar
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/loginProgress"
+                        style="?android:attr/progressBarStyleSmall"
+                        android:layout_alignTop="@id/login"
+                        android:layout_alignBottom="@id/login"
+                        android:layout_alignEnd="@id/login"
+                        android:layout_marginRight="20dp"/>
+
+                </RelativeLayout>
+
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignTop="@+id/cv"
+                android:layout_alignRight="@+id/cv"
+                android:layout_marginTop="-20dp"
+                android:layout_marginRight="-20dp"
+                android:elevation="10dp">
+            </RelativeLayout>
+
+            <!--<TextView-->
+            <!--android:id="@+id/tvForgot"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_below="@+id/cv"-->
+            <!--android:layout_centerHorizontal="true"-->
+            <!--android:text="Forgot your password?"-->
+            <!--android:elevation="5dp"-->
+            <!--android:layout_marginTop="10dp"-->
+            <!--android:textSize="14sp" />-->
+
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:elevation="10dp"
+                android:layout_below="@+id/cv"
+                android:layout_alignLeft="@id/cv"
+                android:layout_alignRight="@id/cv"
+                android:text="or sign-in With Google"
+                android:textAllCaps="false"
+                android:textColor="#48DBFB"
+                android:layout_marginLeft="20dp"
+                android:layout_marginRight="20dp"
+                android:drawableLeft="@drawable/search"
+                android:background="@drawable/bt_uifb"
+                android:paddingLeft="20dp"
+                android:paddingRight="20dp"
+                android:id="@+id/googleSignIn"
+                android:layout_marginTop="20dp"
+                />
+
+        </RelativeLayout>
+
+    </ScrollView>
+</RelativeLayout>
+

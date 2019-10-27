@@ -3,6 +3,7 @@ package com.anx.application.jdriver;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -10,10 +11,12 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Toast;
@@ -42,20 +45,22 @@ public class DriverSettingActivity extends AppCompatActivity {
     private Button mConfirm, mBack;
     private EditText mNameField, mPhoneField, mCarField;
     private ImageView mProfileImage;
+    private EditText mEmailField;
 
     private FirebaseAuth mAuth;
     private DatabaseReference mDriverDatabase;
+
+    private ProgressBar mEmailProgress, mNameProgress, mCarProgress, mPhoneProgress;
 
     private String userId;
     private String mName;
     private String mPhone;
     private String mCar;
+    private String mEmail;
     private String mService;
     private String mProfileImageUrl;
 
     private Uri resultUri;
-
-    private RadioGroup mRadioGroup;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,11 +70,21 @@ public class DriverSettingActivity extends AppCompatActivity {
         // Connecting Variable to layout
         mProfileImage = (ImageView) findViewById(R.id.profileImage);
         mConfirm =  findViewById(R.id.confirm);
-        mBack =  findViewById(R.id.back);
         mNameField = findViewById(R.id.name);
         mPhoneField = findViewById(R.id.phone);
         mCarField = findViewById(R.id.car);
-        mRadioGroup = findViewById(R.id.radioGroup);
+        mEmailField = findViewById(R.id.email);
+
+        mEmailProgress = findViewById(R.id.emailProgress);
+        mNameProgress = findViewById(R.id.nameProgress);
+        mPhoneProgress = findViewById(R.id.phoneProgress);
+        mCarProgress = findViewById(R.id.carProgress);
+
+        Toolbar toolbar = findViewById(R.id.bgHeader);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setTitle("");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
 
         mAuth = FirebaseAuth.getInstance();
         userId = mAuth.getCurrentUser().getUid();
@@ -81,14 +96,6 @@ public class DriverSettingActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 saveUserInformation();
-            }
-        });
-
-        mBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-                return;
             }
         });
 
@@ -111,25 +118,22 @@ public class DriverSettingActivity extends AppCompatActivity {
                     if (map.get("name") != null){
                         mName = map.get("name").toString();
                         mNameField.setText(mName);
+                        mNameProgress.setVisibility(View.GONE);
                     }
                     if (map.get("phone") != null){
                         mPhone = map.get("phone").toString();
                         mPhoneField.setText(mPhone);
+                        mPhoneProgress.setVisibility(View.GONE);
                     }
                     if (map.get("car") != null){
                         mCar = map.get("car").toString();
                         mCarField.setText(mCar);
+                        mCarProgress.setVisibility(View.GONE);
                     }
-                    if (map.get("service") != null){
-                        mService = map.get("service").toString();
-                        switch (mService){
-                            case "Bajjaj":
-                                mRadioGroup.check(R.id.bajjaj);
-                                break;
-                            case "Taxi":
-                                mRadioGroup.check(R.id.taxi);
-                                break;
-                        }
+                    if (map.get("email") != null){
+                        mEmail = map.get("email").toString();
+                        mEmailField.setText(mEmail);
+                        mEmailProgress.setVisibility(View.GONE);
                     }
                     if (map.get("profileImageUrl") != null){
                         StorageReference storageReference =  FirebaseStorage.getInstance().getReference().child("profileImage").child(userId);
@@ -153,23 +157,12 @@ public class DriverSettingActivity extends AppCompatActivity {
     private void saveUserInformation(){
         mName = mNameField.getText().toString();
         mPhone = mPhoneField.getText().toString();
-        mCar = mCarField.getText().toString();
-
-        int selectId = mRadioGroup.getCheckedRadioButtonId();
-        final RadioButton radioButton = (RadioButton) findViewById(selectId);
-
-        if (radioButton.getText() == null){
-            Toast.makeText(getApplicationContext(), "Please choose a service type", Toast.LENGTH_LONG).show();
-            return;
-        }
-
-        mService = radioButton.getText().toString();
+        mEmail = mEmailField.getText().toString();
 
         Map userInfo = new HashMap();
         userInfo.put("name", mName);
         userInfo.put("phone", mPhone);
-        userInfo.put("car", mCar);
-        userInfo.put("service", mService);
+        userInfo.put("email", mEmail);
         mDriverDatabase.updateChildren(userInfo);
 
         if (resultUri != null){
@@ -221,5 +214,13 @@ public class DriverSettingActivity extends AppCompatActivity {
             mProfileImage.setImageURI(resultUri);
         }
     }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        onBackPressed();
+        return true;
+    }
+
+
 
 }

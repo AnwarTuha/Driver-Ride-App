@@ -162,6 +162,7 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
                     Map<String, Object> map = (Map<String, Object>) dataSnapshot.getValue();
                     if (map.get("name") != null){
                         userName.setText(map.get("name").toString());
+                        Toast.makeText(HistorySingleActivity.this, ""+map.get("name"), Toast.LENGTH_SHORT).show();
                     }
                     if (map.get("phone") != null){
                         userPhone.setText(map.get("phone").toString());
