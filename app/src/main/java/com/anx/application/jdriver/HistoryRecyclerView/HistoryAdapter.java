@@ -12,7 +12,7 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-public class HistoryAdapter extends RecyclerView.Adapter<HistoryViewHolders> {
+public class HistoryAdapter extends RecyclerView.Adapter<HistoryViewHolder> {
 
     private List<HistoryObject> itemList;
     private Context context;
@@ -24,19 +24,22 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryViewHolders> {
 
     @NonNull
     @Override
-    public HistoryViewHolders onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public HistoryViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View layoutView = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_history, null, false);
         RecyclerView.LayoutParams lp = new RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         layoutView.setLayoutParams(lp);
 
-        HistoryViewHolders rcv = new HistoryViewHolders(layoutView);
+        HistoryViewHolder rcv = new HistoryViewHolder(layoutView);
         return rcv;
     }
 
     @Override
-    public void onBindViewHolder(@NonNull HistoryViewHolders holder, int position) {
-        holder.rideId.setText(itemList.get(position).getRideId());
-        holder.time.setText(itemList.get(position).getTime());
+    public void onBindViewHolder(@NonNull HistoryViewHolder holder, int position) {
+
+        holder.rideId.setText("Ride id: "+itemList.get(position).getRideId());
+        holder.time.setText("Date: "+itemList.get(position).getTime());
+        holder.rideDestination.setText("Destination: " + itemList.get(position).getRideDestination());
+        holder.rideCost.setText("Fare: Birr. "+ itemList.get(position).getRideCost());
     }
 
     @Override

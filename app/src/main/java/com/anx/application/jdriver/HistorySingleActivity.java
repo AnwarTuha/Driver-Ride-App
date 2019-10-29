@@ -2,11 +2,14 @@ package com.anx.application.jdriver;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.format.DateFormat;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.RatingBar;
@@ -39,6 +42,8 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -48,10 +53,8 @@ import java.util.Map;
 public class HistorySingleActivity extends AppCompatActivity implements OnMapReadyCallback, RoutingListener {
 
     private String rideId, currentUserId, customerId, driverId, userDriverOrCustomer;
-    private String distance;
-    private Double ridePrice;
 
-    private TextView rideLocation, rideDistance, rideDate, userName, userPhone;
+    private TextView rideLocation, rideDistance, rideDate, userName, userPhone, fare;
     private ImageView userImage;
     private RatingBar mRatingBar;
 
@@ -60,6 +63,7 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
     private LatLng destinationLatLng, pickupLatLng;
     private GoogleMap mMap;
     private SupportMapFragment mMapFragment;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -72,11 +76,17 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
         mMapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mMapFragment.getMapAsync(this);
 
+        Toolbar toolbar = findViewById(R.id.toolBar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setTitle("");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
         rideLocation = findViewById(R.id.rideLocation);
         rideDistance = findViewById(R.id.rideDistance);
         rideDate = findViewById(R.id.rideDate);
         userName = findViewById(R.id.userName);
         userPhone = findViewById(R.id.userPhone);
+        fare = findViewById(R.id.ridePrice);
 
         mRatingBar = findViewById(R.id.ratingBar);
 
@@ -89,44 +99,48 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
     }
 
     private void getRideInformation() {
+        final DecimalFormat df = new DecimalFormat("#.#");
+        df.setRoundingMode(RoundingMode.CEILING);
         historyRideInfoDb.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()){
-                    for (DataSnapshot child : dataSnapshot.getChildren()){
-                        if (child.getKey().equals("customer")){
+                if (dataSnapshot.exists()) {
+                    for (DataSnapshot child : dataSnapshot.getChildren()) {
+                        if (child.getKey().equals("customer")) {
                             customerId = child.getValue().toString();
-                            if (!(customerId.equals(currentUserId))){
+                            if (!(customerId.equals(currentUserId))) {
                                 userDriverOrCustomer = "Drivers";
                                 getUserInformation("Customers", customerId);
                             }
                         }
-                        if (child.getKey().equals("driver")){
+                        if (child.getKey().equals("driver")) {
                             driverId = child.getValue().toString();
-                            if (!(driverId.equals(currentUserId))){
+                            if (!(driverId.equals(currentUserId))) {
                                 userDriverOrCustomer = "Customers";
                                 getUserInformation("Drivers", driverId);
                                 displayCustomerRelatedObjects();
                             }
                         }
-                        if (child.getKey().equals("timeStamp")){
+                        if (child.getKey().equals("timeStamp")) {
                             rideDate.setText("Date of Journey: " + getDate(Long.valueOf(child.getValue().toString())));
                         }
-                        if (child.getKey().equals("rating")){
+                        if (child.getKey().equals("rating")) {
                             mRatingBar.setRating(Integer.valueOf(child.getValue().toString()));
                         }
-                        if (child.getKey().equals("distance")){
-                            distance = child.getValue().toString();
-                            rideDistance.setText("Traveled distance: "+ distance);
+                        if (child.getKey().equals("fare")) {
+                            fare.setText("Fare: Birr. "+ df.format(Double.parseDouble(child.getValue().toString())));
                         }
-                        if (child.getKey().equals("destination")){
+
+                        if (child.getKey().equals("distance")) {
+                            rideDistance.setText("Traveled distance (in kms): "+child.getValue().toString());
+                        }
+                        if (child.getKey().equals("destination")) {
                             rideLocation.setText("Destination: " + child.getValue().toString());
                         }
-                        if (child.getKey().equals("location")){
+                        if (child.getKey().equals("location")) {
                             pickupLatLng = new LatLng(Double.valueOf(child.child("from").child("lat").getValue().toString()), Double.valueOf(child.child("from").child("lng").getValue().toString()));
-
                             destinationLatLng = new LatLng(Double.valueOf(child.child("to").child("lat").getValue().toString()), Double.valueOf(child.child("to").child("lng").getValue().toString()));
-                            if (destinationLatLng != new LatLng(0, 0)){
+                            if (destinationLatLng != new LatLng(0, 0)) {
                                 getRouteToMarker();
                             }
                         }
@@ -154,22 +168,21 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
     }
 
     private void getUserInformation(String userType, String userId) {
+        Toast.makeText(this, "Hello from get user info", Toast.LENGTH_LONG).show();
         DatabaseReference mUserDb = FirebaseDatabase.getInstance().getReference().child("Users").child(userType).child(userId);
         mUserDb.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()){
+                if (dataSnapshot.exists()) {
                     Map<String, Object> map = (Map<String, Object>) dataSnapshot.getValue();
-                    if (map.get("name") != null){
-                        userName.setText(map.get("name").toString());
-                        Toast.makeText(HistorySingleActivity.this, ""+map.get("name"), Toast.LENGTH_SHORT).show();
+                    if (map.get("name") != null) {
+                        userName.setText("Driver name: " + map.get("name").toString());
                     }
-                    if (map.get("phone") != null){
-                        userPhone.setText(map.get("phone").toString());
+                    if (map.get("phone") != null) {
+                        userPhone.setText("Driver phone: " + map.get("phone").toString());
                     }
-                    if (map.get("profileImageUrl") != null){
-                        Log.i("anwar", ""+map.get("profileImageUrl"));
-                        StorageReference storageReference =  FirebaseStorage.getInstance().getReference().child("profileImage").child(customerId);
+                    if (map.get("profileImageUrl") != null) {
+                        StorageReference storageReference = FirebaseStorage.getInstance().getReference().child("profileImage").child(customerId);
                         storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                             @Override
                             public void onSuccess(Uri uri) {
@@ -189,7 +202,7 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
 
     private String getDate(Long timeStamp) {
         Calendar cal = Calendar.getInstance(Locale.getDefault());
-        cal.setTimeInMillis(timeStamp*1000);
+        cal.setTimeInMillis(timeStamp * 1000);
         String date = DateFormat.format("dd-MM-yyyy hh:mm", cal).toString();
         return date;
     }
@@ -230,7 +243,7 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
         LatLngBounds bounds = builder.build();
 
         int width = getResources().getDisplayMetrics().widthPixels;
-        int padding = (int) (width * 0.2);
+        int padding = (int) (width * 0.1);
 
         CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngBounds(bounds, padding);
         mMap.animateCamera(cameraUpdate);
@@ -238,7 +251,7 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
         mMap.addMarker(new MarkerOptions().position(pickupLatLng).title("Pickup Location"));
         mMap.addMarker(new MarkerOptions().position(destinationLatLng).title("Destination"));
 
-        if(polylines.size()>0) {
+        if (polylines.size() > 0) {
             for (Polyline poly : polylines) {
                 poly.remove();
             }
@@ -246,7 +259,7 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
 
         polylines = new ArrayList<>();
         //add route(s) to the map.
-        for (int i = 0; i <route.size(); i++) {
+        for (int i = 0; i < route.size(); i++) {
 
             //In case of more than 5 alternative routes
             int colorIndex = i % COLORS.length;
@@ -258,23 +271,28 @@ public class HistorySingleActivity extends AppCompatActivity implements OnMapRea
             Polyline polyline = mMap.addPolyline(polyOptions);
             polylines.add(polyline);
 
-            Toast.makeText(getApplicationContext(),"Route "+ (i+1) +": distance - "+ route.get(i).getDistanceValue()+": duration - "+ route.get(i).getDurationValue(),Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), "Route " + (i + 1) + ": distance - " + route.get(i).getDistanceValue() + ": duration - " + route.get(i).getDurationValue(), Toast.LENGTH_SHORT).show();
         }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        onBackPressed();
+        return true;
     }
 
     @Override
     public void onRoutingCancelled() {
     }
 
-    private void erasePolyLines(){
-        for (Polyline line : polylines){
-            if (line != null){
+    private void erasePolyLines() {
+        for (Polyline line : polylines) {
+            if (line != null) {
                 line.remove();
             }
         }
-        if (polylines != null){
+        if (polylines != null) {
             polylines.clear();
         }
     }
-
 }

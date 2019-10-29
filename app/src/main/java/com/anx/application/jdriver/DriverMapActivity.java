@@ -15,6 +15,8 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
 import android.net.Uri;
@@ -69,6 +71,7 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.suke.widget.SwitchButton;
 
+import java.io.IOException;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -76,42 +79,55 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class DriverMapActivity extends AppCompatActivity implements RoutingListener, OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback, NavigationView.OnNavigationItemSelectedListener {
 
 
     private static final int[] COLORS = new int[]{R.color.colorPrimaryDark};
-    Location mLastLocation;
-    LocationRequest mLocationRequest;
-    SupportMapFragment mapFragment;
-    Marker pickupMarker;
-    LatLng pickupLatLng;
-    private GoogleMap mMap;
-    private FusedLocationProviderClient mFusedLocationClient;
     private int status = 0;
+
     private double COMPANY_CUT = 0.17;
     private double RIDE_PRICE;
-    private String customerId = "", destination, driverQuota;
-    private LatLng destinationLatLng;
-    private Boolean isLoggingOut = false;
     private double rideDistance, startingPrice, quota;
+    private double newQuota;
+    private int COMPANY_CUT_GIVEN = 0;
+
+    private String customerId = "", destination, driverQuota;
+    private String serviceType, currentDriver, quotaReference;
+
+    private Boolean isLoggingOut = false;
+    private boolean cameraSet = false;
+
     private Button mLogout, mSetting, mRideStatus, mHistory, mAccept, mDecline, mCallCustomer;
     private ImageView mCustomerProfileImage;
     private LinearLayout mCustomerInfo;
     private TextView mCustomerName, mCustomerPhone, mCustomerDestination, mDriverQuota, mRideCost;
-    //private Switch mWorkingSwitch;
-    private DatabaseReference assignedCustomerPickupLocationRef;
-    private ValueEventListener assignedCustomerPickupLocationRefListener;
-    private String serviceType, currentDriver, quotaReference;
-    private double newQuota;
-    private int COMPANY_CUT_GIVEN = 0;
-    private com.suke.widget.SwitchButton mWorkingSwitch;
-    private DrawerLayout drawer;
-    private boolean cameraSet = false;
     private TextView mPhoneNumber, mFullName;
     private ImageView mProfileImage;
     private TextView mService;
+    private TextView mCustomerPickup;
+    private com.suke.widget.SwitchButton mWorkingSwitch;
+    private DrawerLayout drawer;
+
+    private Location mLastLocation;
+    private LocationRequest mLocationRequest;
+    private SupportMapFragment mapFragment;
+    private Marker pickupMarker;
+    private LatLng pickupLatLng, destinationLatLng;
+    private GoogleMap mMap;
+    private FusedLocationProviderClient mFusedLocationClient;
+    private DatabaseReference assignedCustomerPickupLocationRef;
+    private ValueEventListener assignedCustomerPickupLocationRefListener;
+    private Geocoder geocoder;
+
+    private List<Polyline> polylines;
+    private List<Address> addresses;
+
+
+    // Location call back when map is ready
+
     LocationCallback mLocationCallback = new LocationCallback() {
         @SuppressLint("SetTextI18n")
         @Override
@@ -127,10 +143,10 @@ public class DriverMapActivity extends AppCompatActivity implements RoutingListe
                             Map<String, Object> driverMap = (Map<String, Object>) dataSnapshot.getValue();
                             if (driverMap.get("service").equals("Bajjaj")) {
                                 startingPrice = 15.00;
-                                mService.setText("Bajjaj");
+                                mService.setText("Service type: Bajjaj");
                             } else if (driverMap.get("service").equals("Taxi")) {
                                 startingPrice = 40.00;
-                                mService.setText("Taxi");
+                                mService.setText("Service type: Taxi");
                             } else {
                                 Toast.makeText(DriverMapActivity.this, "Driver service type not assigned yet", Toast.LENGTH_SHORT).show();
                             }
@@ -156,7 +172,9 @@ public class DriverMapActivity extends AppCompatActivity implements RoutingListe
 
 
                 if (!customerId.equals("")) {
+
                     COMPANY_CUT_GIVEN = 0;
+
                     Location pickupLocation = new Location(LocationManager.GPS_PROVIDER);
                     pickupLocation.setLatitude(pickupLatLng.latitude);
                     pickupLocation.setLongitude(pickupLatLng.longitude);
@@ -174,9 +192,7 @@ public class DriverMapActivity extends AppCompatActivity implements RoutingListe
 
                     COMPANY_CUT = RIDE_PRICE * 0.17;
 
-                    Toast.makeText(DriverMapActivity.this, rideDistance + " " + df.format(RIDE_PRICE) + " " + df.format(COMPANY_CUT), Toast.LENGTH_LONG).show();
-
-                    mRideCost.setText(RIDE_PRICE + "");
+                    mRideCost.setText(df.format(RIDE_PRICE) + "");
 
                     newQuota = Double.parseDouble(quotaReference) - (COMPANY_CUT);
 
@@ -185,7 +201,7 @@ public class DriverMapActivity extends AppCompatActivity implements RoutingListe
                 mLastLocation = location;
                 final LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
                 Log.i("Hello", "Location Changed");
-                if (!cameraSet){
+                if (!cameraSet) {
                     mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
                     cameraSet = true;
                 }
@@ -241,6 +257,11 @@ public class DriverMapActivity extends AppCompatActivity implements RoutingListe
         }
     };
 
+    // End of Location call back
+
+
+    // provide a cut from the RIDE_PRICE to the company
+
     private void provideCompanyCut() {
 
         if (COMPANY_CUT_GIVEN == 0) {
@@ -264,22 +285,28 @@ public class DriverMapActivity extends AppCompatActivity implements RoutingListe
 
     }
 
-    private List<Polyline> polylines;
+    // End of provideCompanyCut function
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_driver_map);
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        polylines = new ArrayList<>();
-
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-
         mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        startService(new Intent(this, onAppKilled.class));
+
+        polylines = new ArrayList<>();// initialize poly lines
+
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
+
+
+        startService(new Intent(this, onAppKilled.class));// used to make app run in the background
 
         androidx.appcompat.widget.Toolbar toolbar = findViewById(R.id.toolBar);
         setSupportActionBar(toolbar);
@@ -301,6 +328,7 @@ public class DriverMapActivity extends AppCompatActivity implements RoutingListe
         mCustomerDestination = (TextView) findViewById(R.id.customerDestination);
         mDriverQuota = (TextView) findViewById(R.id.driverQuota);
         mRideCost = (TextView) findViewById(R.id.ridePrice);
+        mCustomerPickup = findViewById(R.id.customerPickup);
 
         View v = navigationView.getHeaderView(0);
         mFullName = v.findViewById(R.id.nav_name);
@@ -311,8 +339,6 @@ public class DriverMapActivity extends AppCompatActivity implements RoutingListe
         getUserInformation();
 
 
-
-
         mRideStatus = (Button) findViewById(R.id.rideStatus);
         mCallCustomer = (Button) findViewById(R.id.callCustomer);
 
@@ -320,12 +346,12 @@ public class DriverMapActivity extends AppCompatActivity implements RoutingListe
             @Override
             public void onClick(View v) {
                 Intent callIntent = new Intent(Intent.ACTION_DIAL);
-                callIntent.setData(Uri.parse("tel:"+mCustomerPhone.getText().toString()));
+                callIntent.setData(Uri.parse("tel:" + mCustomerPhone.getText().toString()));
                 startActivity(callIntent);
             }
-        });
+        }); // call customer button
 
-//        mWorkingSwitch = findViewById(R.id.workingSwitch);
+
         mWorkingSwitch = (com.suke.widget.SwitchButton) findViewById(R.id.workingSwitch);
 
         mWorkingSwitch.setOnCheckedChangeListener(new SwitchButton.OnCheckedChangeListener() {
@@ -338,7 +364,9 @@ public class DriverMapActivity extends AppCompatActivity implements RoutingListe
                     disconnectDriver();
                 }
             }
-        });
+        });// driver is working or not switch
+
+
         // display ride status
         mRideStatus.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -366,6 +394,9 @@ public class DriverMapActivity extends AppCompatActivity implements RoutingListe
         getAssignedCustomer();
     }
 
+
+    // Get's user information when request arrives
+
     private void getUserInformation() {
 
         final String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
@@ -377,7 +408,7 @@ public class DriverMapActivity extends AppCompatActivity implements RoutingListe
                     Map<String, Object> map = (Map<String, Object>) dataSnapshot.getValue();
                     if (map.get("name") != null) {
                         mFullName.setText(map.get("name").toString());
-                        Toast.makeText(DriverMapActivity.this, ""+map.get("name"), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(DriverMapActivity.this, "" + map.get("name"), Toast.LENGTH_SHORT).show();
                     }
                     if (map.get("phone") != null) {
                         mPhoneNumber.setText(map.get("phone").toString());
@@ -401,6 +432,11 @@ public class DriverMapActivity extends AppCompatActivity implements RoutingListe
 
     }
 
+    // End of getUserInformation
+
+
+    // get driver current quota left with the company
+
     private void getDriverQuota() {
         final DecimalFormat df = new DecimalFormat("#.#");
         df.setRoundingMode(RoundingMode.CEILING);
@@ -416,7 +452,7 @@ public class DriverMapActivity extends AppCompatActivity implements RoutingListe
                         disconnectDriver();
                         mWorkingSwitch.setChecked(false);
                     } else {
-                        mDriverQuota.setText(df.format(quota) + " birr");
+                        mDriverQuota.setText("Quota: " + df.format(quota) + " birr");
                     }
                 } else { // If there is no customer request
                     mDriverQuota.setText("Please visit local office to get quota");
@@ -431,6 +467,10 @@ public class DriverMapActivity extends AppCompatActivity implements RoutingListe
         });
     }
 
+    // End of getDriverQuota function
+
+    // Logs out current user
+
     private void logOut() {
         isLoggingOut = true;
         disconnectDriver();
@@ -440,6 +480,10 @@ public class DriverMapActivity extends AppCompatActivity implements RoutingListe
         finish();
         return;
     }
+
+    // End of log out function
+
+    // Get assigned customer when request is made to the driver
 
     private void getAssignedCustomer() {
         String driverId = FirebaseAuth.getInstance().getCurrentUser().getUid();
@@ -465,6 +509,10 @@ public class DriverMapActivity extends AppCompatActivity implements RoutingListe
         });
     }
 
+    // End of getAssignedCustomer
+
+    // Get's assigned customer's pickup location
+
     private void getAssignedCustomerPickupLocation() {
         assignedCustomerPickupLocationRef = FirebaseDatabase.getInstance().getReference().child("customerRequest").child(customerId).child("l");
         assignedCustomerPickupLocationRefListener = assignedCustomerPickupLocationRef.addValueEventListener(new ValueEventListener() {
@@ -483,6 +531,17 @@ public class DriverMapActivity extends AppCompatActivity implements RoutingListe
                     }
                     pickupLatLng = new LatLng(locationLat, locationLng);
                     pickupMarker = mMap.addMarker(new MarkerOptions().position(pickupLatLng).title("Pickup Location"));
+
+                    geocoder = new Geocoder(DriverMapActivity.this, Locale.getDefault());
+                    try {
+                        addresses = geocoder.getFromLocation(pickupLatLng.latitude, pickupLatLng.longitude, 1);
+                        String address = addresses.get(0).getAddressLine(0);
+                        mCustomerPickup.setText(address);
+                    } catch (IOException e) {
+                        Toast.makeText(DriverMapActivity.this, "IOException", Toast.LENGTH_SHORT).show();
+                        e.printStackTrace();
+                    }
+
                     getRouteToMarker(pickupLatLng);
                 }
             }
@@ -492,6 +551,10 @@ public class DriverMapActivity extends AppCompatActivity implements RoutingListe
             }
         });
     }
+
+    // End of getAssignedCustomerPickupLocation function
+
+    // draws route from current location to given location
 
     private void getRouteToMarker(LatLng pickupLatLng) {
         if (pickupLatLng != null && mLastLocation != null) {
@@ -505,6 +568,10 @@ public class DriverMapActivity extends AppCompatActivity implements RoutingListe
             routing.execute();
         }
     }
+
+    // End of getRouteMarker function
+
+    // get's final destination of customer to show to current user
 
     private void getAssignedCustomerDestination() {
         String driverId = FirebaseAuth.getInstance().getCurrentUser().getUid();
@@ -541,6 +608,10 @@ public class DriverMapActivity extends AppCompatActivity implements RoutingListe
         });
     }
 
+    // end of getAssignedCustomerDestination function
+
+    // get's assigned customer information (name, phone and optionally a photo)
+
     private void getAssignedCustomerInfo() {
         Log.i("CustomerInfo", "Info called");
         mCustomerInfo.setVisibility(View.VISIBLE);
@@ -575,7 +646,12 @@ public class DriverMapActivity extends AppCompatActivity implements RoutingListe
         });
     }
 
-    private void endRide() { // customer cancels ride or the ride officially ends
+    // end of getAssignedCustomerInfo function
+
+
+    // called when drive officially ends or customer cancel's drive
+
+    private void endRide() {
         mRideStatus.setText("Picked Customer");
         mCustomerInfo.setVisibility(View.GONE);
         erasePolyLines();
@@ -612,6 +688,10 @@ public class DriverMapActivity extends AppCompatActivity implements RoutingListe
 
     }
 
+    // end of endRide function
+
+    // records essential information (destination, route, fare, distance and date) when drive officially ends
+
     private void recordRide() {
         String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(userId).child("history");
@@ -638,10 +718,18 @@ public class DriverMapActivity extends AppCompatActivity implements RoutingListe
 
     }
 
+    // end of recordRide function
+
+    // converts system date and time into a comprehensive timestamp
+
     private Long getCurrentTimeStamp() {
         Long timeStamp = System.currentTimeMillis() / 1000;
         return timeStamp;
     }
+
+    // end of getCurrentTimeStamp
+
+    // called when map is ready to use
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
@@ -660,6 +748,10 @@ public class DriverMapActivity extends AppCompatActivity implements RoutingListe
             }
         }
     }
+
+    // end of onMapReady function
+
+    // check explicitly if location permission is given to the app
 
     private void checkLocationPermission() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -681,6 +773,10 @@ public class DriverMapActivity extends AppCompatActivity implements RoutingListe
         }
     }
 
+    // end of checkLocationPermission function
+
+    // called when permission is given to the app
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -700,11 +796,19 @@ public class DriverMapActivity extends AppCompatActivity implements RoutingListe
         }
     }
 
+    // end of onRequestPermissionResult function
+
+    // connects driver when working switch is on
+
     private void connectDriver() {
         checkLocationPermission();
         mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.myLooper());
         mMap.setMyLocationEnabled(true);
     }
+
+    // end if connectDriver function
+
+    // disconnects the driver when working switch is off or app is killed
 
     private void disconnectDriver() {
         if (mFusedLocationClient != null) {
@@ -731,6 +835,10 @@ public class DriverMapActivity extends AppCompatActivity implements RoutingListe
 
     }
 
+    // end of disconnectDriver function
+
+    // called when drawing a route is not available
+
     @Override
     public void onRoutingFailure(RouteException e) {
         if (e != null) {
@@ -740,9 +848,13 @@ public class DriverMapActivity extends AppCompatActivity implements RoutingListe
         }
     }
 
+    // end of onRoutingFailure
+
     @Override
     public void onRoutingStart() {
     }
+
+    // called when route is successfully drawn
 
     @Override
     public void onRoutingSuccess(ArrayList<Route> route, int shortestRouteIndex) {
@@ -783,6 +895,8 @@ public class DriverMapActivity extends AppCompatActivity implements RoutingListe
             Toast.makeText(getApplicationContext(), "Route " + (i + 1) + ": distance - " + route.get(i).getDistanceValue() + ": duration - " + route.get(i).getDurationValue(), Toast.LENGTH_SHORT).show();
         }
     }
+
+    // end onRoutingSuccess function
 
     @Override
     public void onRoutingCancelled() {

@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -48,24 +49,14 @@ public class VerifyPhoneActivity extends AppCompatActivity {
 
     private int APP_START = 0;
 
+    private ProgressDialog dialog;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_verify_phone);
 
         mAuth = FirebaseAuth.getInstance();
-//        firebaseAuthListener = new FirebaseAuth.AuthStateListener() {
-//            @Override
-//            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-//                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-//                if (user != null){
-//                    Intent intent = new Intent(VerifyPhoneActivity.this, CustomerMapActivity.class);
-//                    startActivity(intent);
-//                    finish();
-//                    return;
-//                }
-//            }
-//        };
 
         verify = findViewById(R.id.verify);
         otp = findViewById(R.id.otp);
@@ -98,7 +89,12 @@ public class VerifyPhoneActivity extends AppCompatActivity {
                         try {
                             PhoneAuthCredential credential = PhoneAuthProvider.getCredential(verificationId, verificationCode);
                             signInWithPhoneAuthCredential(credential);
+                            dialog = ProgressDialog.show(VerifyPhoneActivity.this, "",
+                                    "Signing in. Please wait...", true);
                         } catch (Exception e) {
+                            if (dialog.isShowing()){
+                                dialog.cancel();
+                            }
                             Toast.makeText(VerifyPhoneActivity.this, "" + e.getMessage(), Toast.LENGTH_SHORT).show();
                         }
                     }
@@ -111,13 +107,21 @@ public class VerifyPhoneActivity extends AppCompatActivity {
             public void onVerificationCompleted(@NonNull PhoneAuthCredential phoneAuthCredential) {
                 otp.setText(verificationId);
                 signInWithPhoneAuthCredential(phoneAuthCredential);
+                dialog = ProgressDialog.show(VerifyPhoneActivity.this, "",
+                        "Signing in. Please wait...", true);
             }
 
             @Override
             public void onVerificationFailed(@NonNull FirebaseException e) {
                 if (e instanceof FirebaseAuthInvalidCredentialsException) {
+                    if (dialog.isShowing()){
+                        dialog.cancel();
+                    }
                     Toast.makeText(VerifyPhoneActivity.this, "Invalid code Entered", Toast.LENGTH_SHORT).show();
                 } else if (e instanceof FirebaseTooManyRequestsException) {
+                    if (dialog.isShowing()){
+                        dialog.cancel();
+                    }
                     Toast.makeText(VerifyPhoneActivity.this, "SMS quota for this user is exceeded", Toast.LENGTH_SHORT).show();
                 }
             }
@@ -141,7 +145,7 @@ public class VerifyPhoneActivity extends AppCompatActivity {
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
                             Toast.makeText(VerifyPhoneActivity.this, "Sign in with credential Successful", Toast.LENGTH_SHORT).show();
-                            String userId = task.getResult().getUser().getUid();
+                            String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();;
                             DatabaseReference current_user_db = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(userId);
                             current_user_db.addListenerForSingleValueEvent(new ValueEventListener() {
                                 @Override
@@ -152,6 +156,7 @@ public class VerifyPhoneActivity extends AppCompatActivity {
                                         if (user != null) {
                                             Intent intent = new Intent(VerifyPhoneActivity.this, DriverMapActivity.class);
                                             startActivity(intent);
+                                            dialog.cancel();
                                             finish();
                                         }
                                     } else {
@@ -159,6 +164,7 @@ public class VerifyPhoneActivity extends AppCompatActivity {
                                         Intent intent = new Intent(VerifyPhoneActivity.this, RegisterActivity.class);
                                         intent.putExtra("phoneNumber", phoneNumber.replace("+251", ""));
                                         startActivity(intent);
+                                        dialog.cancel();
                                         finish();
                                     }
                                 }
@@ -168,24 +174,6 @@ public class VerifyPhoneActivity extends AppCompatActivity {
 
                                 }
                             });
-
-//                            boolean isNew = task.getResult().getAdditionalUserInfo().isNewUser();
-//                            Log.e("isNew", "" + isNew);
-//                            if (isNew) {
-//                                Toast.makeText(VerifyPhoneActivity.this, "New User", Toast.LENGTH_SHORT).show();
-//                                Intent intent = new Intent(VerifyPhoneActivity.this, RegisterActivity.class);
-//                                intent.putExtra("phoneNumber", phoneNumber.replace("+251", ""));
-//                                startActivity(intent);
-//                                finish();
-//                            } else {
-//                                Toast.makeText(VerifyPhoneActivity.this, "Nebar user", Toast.LENGTH_SHORT).show();
-//                                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-//                                if (user != null) {
-//                                    Intent intent = new Intent(VerifyPhoneActivity.this, DriverMapActivity.class);
-//                                    startActivity(intent);
-//                                    finish();
-//                                }
-//                            }
                         } else {
                             Toast.makeText(VerifyPhoneActivity.this, "Sign in with credential failed, " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
                             if (task.getException() instanceof FirebaseAuthInvalidCredentialsException) {

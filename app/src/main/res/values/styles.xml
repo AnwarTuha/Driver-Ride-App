@@ -35,4 +35,8 @@
 
     </style>
 
+    <style name="ToolbarThemeBlack" parent="@style/ThemeOverlay.AppCompat.ActionBar">
+        <item name="colorControlNormal">@android:color/black</item>
+    </style>
+
 </resources>

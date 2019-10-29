@@ -5,6 +5,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -34,6 +35,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.hbb20.CountryCodePicker;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -46,17 +48,20 @@ public class DriverSettingActivity extends AppCompatActivity {
     private EditText mNameField, mPhoneField, mCarField;
     private ImageView mProfileImage;
     private EditText mEmailField;
+    private CountryCodePicker ccp;
 
     private FirebaseAuth mAuth;
     private DatabaseReference mDriverDatabase;
 
     private ProgressBar mEmailProgress, mNameProgress, mCarProgress, mPhoneProgress;
 
-    private String userId;
-    private String mName;
-    private String mPhone;
-    private String mCar;
-    private String mEmail;
+    private String userId = "";
+    private String mName = "";
+    private String mPhone = "";
+    private String mCarType = "";
+    private String mCarColor = "";
+    private String mPlate = "";
+    private String mEmail = "";
     private String mService;
     private String mProfileImageUrl;
 
@@ -79,6 +84,7 @@ public class DriverSettingActivity extends AppCompatActivity {
         mNameProgress = findViewById(R.id.nameProgress);
         mPhoneProgress = findViewById(R.id.phoneProgress);
         mCarProgress = findViewById(R.id.carProgress);
+        ccp = findViewById(R.id.ccp);
 
         Toolbar toolbar = findViewById(R.id.bgHeader);
         setSupportActionBar(toolbar);
@@ -111,6 +117,7 @@ public class DriverSettingActivity extends AppCompatActivity {
 
     private void getUserInfo(){
         mDriverDatabase.addValueEventListener(new ValueEventListener() {
+            @SuppressLint("SetTextI18n")
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists() && dataSnapshot.getChildrenCount() > 0){
@@ -122,12 +129,18 @@ public class DriverSettingActivity extends AppCompatActivity {
                     }
                     if (map.get("phone") != null){
                         mPhone = map.get("phone").toString();
-                        mPhoneField.setText(mPhone);
+                        mPhoneField.setText(mPhone.replace("+251", ""));
                         mPhoneProgress.setVisibility(View.GONE);
                     }
-                    if (map.get("car") != null){
-                        mCar = map.get("car").toString();
-                        mCarField.setText(mCar);
+                    if (map.get("cartype") != null){
+                        mCarType = map.get("cartype").toString();
+                        if (map.get("color") != null){
+                            mCarColor = map.get("color").toString();
+                        }
+                        if (map.get("plate") != null){
+                            mPlate = map.get("plate").toString();
+                        }
+                        mCarField.setText(mCarColor+" "+mCarType+", Plate: "+mPlate);
                         mCarProgress.setVisibility(View.GONE);
                     }
                     if (map.get("email") != null){
@@ -156,7 +169,7 @@ public class DriverSettingActivity extends AppCompatActivity {
 
     private void saveUserInformation(){
         mName = mNameField.getText().toString();
-        mPhone = mPhoneField.getText().toString();
+        mPhone = "+" + ccp.getFullNumber() + mPhoneField.getText().toString();
         mEmail = mEmailField.getText().toString();
 
         Map userInfo = new HashMap();

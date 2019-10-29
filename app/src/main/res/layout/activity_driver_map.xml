@@ -136,21 +136,20 @@
                         android:paddingLeft="10sp">
 
                         <TextView
+                            android:id="@+id/customerPickup"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:paddingBottom="5sp"
+                            android:text="Pickup: --"
+                            android:textColor="@android:color/black"
+                            android:textSize="18sp" />
+
+                        <TextView
                             android:id="@+id/customerDestination"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:paddingBottom="5sp"
                             android:text="Destination: --"
-                            android:textColor="@android:color/black"
-                            android:textSize="18sp" />
-
-                        <TextView
-                            android:id="@+id/ridePrice"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:paddingTop="5sp"
-                            android:paddingBottom="5sp"
-                            android:text="Ride Cost (+ starting price): --"
                             android:textColor="@android:color/black"
                             android:textSize="18sp" />
 
@@ -171,6 +170,16 @@
                             android:paddingTop="5sp"
                             android:paddingBottom="5sp"
                             android:text="Customer Phone: --"
+                            android:textColor="@android:color/black"
+                            android:textSize="18sp" />
+
+                        <TextView
+                            android:id="@+id/ridePrice"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:paddingTop="5sp"
+                            android:paddingBottom="5sp"
+                            android:text="Ride Cost (+ starting price): --"
                             android:textColor="@android:color/black"
                             android:textSize="18sp" />
 

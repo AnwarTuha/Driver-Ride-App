@@ -5,6 +5,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -63,6 +64,8 @@ public class RegisterActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private DatabaseReference mDriverDatabase;
     private FirebaseAuth.AuthStateListener firebaseAuthListener;
+
+    private ProgressDialog dialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -138,9 +141,7 @@ public class RegisterActivity extends AppCompatActivity {
         mRegister.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (TextUtils.isEmpty(mEmail.getText())) {
-                    mEmail.setError("This field is required!");
-                } else if (TextUtils.isEmpty(mUsername.getText())) {
+                 if (TextUtils.isEmpty(mUsername.getText())) {
                     mUsername.setError("This field is required!");
                 } else if (TextUtils.isEmpty(mPhone.getText())) {
                     mPhone.setError("This field is required!");
@@ -161,6 +162,8 @@ public class RegisterActivity extends AppCompatActivity {
                     mDriverDatabase = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(userId);
                     current_user_db.setValue(true);
                     saveUserInformation(userName, fullNumber, email);
+                    dialog = ProgressDialog.show(RegisterActivity.this, "",
+                            "Saving. Please wait...", true);
                 }
             }
         });
@@ -206,6 +209,7 @@ public class RegisterActivity extends AppCompatActivity {
                     newImage.put("profileImageUrl", downloadUri.toString());
                     mDriverDatabase.updateChildren(newImage);
                     Toast.makeText(getApplicationContext(), "Image Uploaded Successfully", Toast.LENGTH_LONG).show();
+                    dialog.cancel();
                     finish();
                     return;
                 }
@@ -243,6 +247,17 @@ public class RegisterActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        FirebaseAuth.getInstance().getCurrentUser().delete();
+        FirebaseAuth.getInstance().signOut();
+        Intent intent = new Intent(RegisterActivity.this, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(intent);
+        finish();
     }
 
     @Override
