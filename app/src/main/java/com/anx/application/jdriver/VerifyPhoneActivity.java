@@ -145,7 +145,7 @@ public class VerifyPhoneActivity extends AppCompatActivity {
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
                             Toast.makeText(VerifyPhoneActivity.this, "Sign in with credential Successful", Toast.LENGTH_SHORT).show();
-                            String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();;
+                            String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
                             DatabaseReference current_user_db = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(userId);
                             current_user_db.addListenerForSingleValueEvent(new ValueEventListener() {
                                 @Override

@@ -898,9 +898,16 @@ public class DriverMapActivity extends AppCompatActivity implements RoutingListe
 
     // end onRoutingSuccess function
 
+    // if route drawing is cancelled
+
     @Override
     public void onRoutingCancelled() {
     }
+
+    // end of onRoutingCancelled function
+
+
+    // called to erase drawn poly lines from map
 
     private void erasePolyLines() {
         for (Polyline line : polylines) {
@@ -912,6 +919,11 @@ public class DriverMapActivity extends AppCompatActivity implements RoutingListe
             polylines.clear();
         }
     }
+
+    // end of erasePolyLines function
+
+
+    // listener for side navigation drawer buttons
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
@@ -941,6 +953,10 @@ public class DriverMapActivity extends AppCompatActivity implements RoutingListe
         return true;
     }
 
+    // end of onNavigationItemSelected function
+
+    // listener for back button
+
     @Override
     public void onBackPressed() {
 
@@ -965,4 +981,6 @@ public class DriverMapActivity extends AppCompatActivity implements RoutingListe
             super.onBackPressed();
         }
     }
+
+    // end of onBackPressed function
 }
