@@ -121,12 +121,11 @@
                     android:background="@android:color/white"
                     android:orientation="horizontal">
 
-                    <ImageView
+                    <de.hdodenhof.circleimageview.CircleImageView
                         android:id="@+id/customerProfileImage"
-                        android:layout_width="100sp"
-                        android:layout_height="100sp"
+                        android:layout_width="100dp"
+                        android:layout_height="100dp"
                         android:layout_gravity="center"
-                        android:padding="20sp"
                         android:src="@drawable/ic_default_profile" />
 
                     <LinearLayout

@@ -119,9 +119,6 @@ public class VerifyPhoneActivity extends AppCompatActivity {
                     }
                     Toast.makeText(VerifyPhoneActivity.this, "Invalid code Entered", Toast.LENGTH_SHORT).show();
                 } else if (e instanceof FirebaseTooManyRequestsException) {
-                    if (dialog.isShowing()){
-                        dialog.cancel();
-                    }
                     Toast.makeText(VerifyPhoneActivity.this, "SMS quota for this user is exceeded", Toast.LENGTH_SHORT).show();
                 }
             }
@@ -145,7 +142,7 @@ public class VerifyPhoneActivity extends AppCompatActivity {
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
                             Toast.makeText(VerifyPhoneActivity.this, "Sign in with credential Successful", Toast.LENGTH_SHORT).show();
-                            String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                            String userId = task.getResult().getUser().getUid();
                             DatabaseReference current_user_db = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(userId);
                             current_user_db.addListenerForSingleValueEvent(new ValueEventListener() {
                                 @Override
@@ -168,7 +165,6 @@ public class VerifyPhoneActivity extends AppCompatActivity {
                                         finish();
                                     }
                                 }
-
                                 @Override
                                 public void onCancelled(@NonNull DatabaseError databaseError) {
 

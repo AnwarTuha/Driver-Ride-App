@@ -192,7 +192,7 @@ public class DriverMapActivity extends AppCompatActivity implements RoutingListe
 
                     COMPANY_CUT = RIDE_PRICE * 0.17;
 
-                    mRideCost.setText(df.format(RIDE_PRICE) + "");
+                    mRideCost.setText("Price: "+ df.format(RIDE_PRICE) + "");
 
                     newQuota = Double.parseDouble(quotaReference) - (COMPANY_CUT);
 
@@ -623,10 +623,10 @@ public class DriverMapActivity extends AppCompatActivity implements RoutingListe
                 if (dataSnapshot.exists() && dataSnapshot.getChildrenCount() > 0) {
                     Map<String, Object> map = (Map<String, Object>) dataSnapshot.getValue();
                     if (map.get("name") != null) {
-                        mCustomerName.setText(map.get("name").toString());
+                        mCustomerName.setText("Customer name: " + map.get("name").toString());
                     }
                     if (map.get("phone") != null) {
-                        mCustomerPhone.setText(map.get("phone").toString());
+                        mCustomerPhone.setText("Customer phone: " + map.get("phone").toString());
                     }
                     if (map.get("profileImageUrl") != null) {
                         StorageReference storageReference = FirebaseStorage.getInstance().getReference().child("profileImage").child(customerId);
@@ -831,8 +831,6 @@ public class DriverMapActivity extends AppCompatActivity implements RoutingListe
 
             }
         });
-
-
     }
 
     // end of disconnectDriver function

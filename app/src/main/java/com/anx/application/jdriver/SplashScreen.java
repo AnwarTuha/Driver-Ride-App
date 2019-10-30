@@ -76,6 +76,7 @@ public class SplashScreen extends AppCompatActivity {
                 .getNetworkInfo(ConnectivityManager.TYPE_WIFI) != null && connectivityManager
                 .getNetworkInfo(ConnectivityManager.TYPE_WIFI)
                 .getState() == NetworkInfo.State.CONNECTED);
+
     }
 
     private void setStatusBarColor(@ColorRes int statusBarColor) {
