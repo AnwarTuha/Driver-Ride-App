@@ -142,15 +142,15 @@ public class VerifyPhoneActivity extends AppCompatActivity {
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
                             Toast.makeText(VerifyPhoneActivity.this, "Sign in with credential Successful", Toast.LENGTH_SHORT).show();
-                            String userId = task.getResult().getUser().getUid();
+                            final String userId = task.getResult().getUser().getUid();
                             DatabaseReference current_user_db = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(userId);
                             current_user_db.addListenerForSingleValueEvent(new ValueEventListener() {
                                 @Override
                                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                                     if (dataSnapshot.exists()){
                                         Toast.makeText(VerifyPhoneActivity.this, "Nebar user", Toast.LENGTH_SHORT).show();
-                                        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                                        if (user != null) {
+                                        //FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                                        if (userId != null) {
                                             Intent intent = new Intent(VerifyPhoneActivity.this, DriverMapActivity.class);
                                             startActivity(intent);
                                             dialog.cancel();

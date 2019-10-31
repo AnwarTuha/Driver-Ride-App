@@ -26,8 +26,9 @@
             android:name=".onAppKilled"
             android:stopWithTask="false" />
 
-        <activity android:name=".MainActivity" android:theme="@style/AppTheme.FullScreen">
-        </activity>
+        <activity
+            android:name=".MainActivity"
+            android:theme="@style/AppTheme.FullScreen"></activity>
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.
              (See the file "res/values/google_maps_api.xml").
@@ -44,12 +45,15 @@
             android:name=".DriverMapActivity"
             android:label="@string/title_activity_driver_map"
             android:theme="@style/AppTheme.NoActionBar" />
-        <activity android:name=".DriverSettingActivity"
-            android:theme="@style/AppTheme.FullScreen"/>
-        <activity android:name=".HistoryActivity"
-            android:theme="@style/AppTheme.FullScreen"/>
-        <activity android:name=".HistorySingleActivity"
-            android:theme="@style/AppTheme.FullScreen"/>
+        <activity
+            android:name=".DriverSettingActivity"
+            android:theme="@style/AppTheme.FullScreen" />
+        <activity
+            android:name=".HistoryActivity"
+            android:theme="@style/AppTheme.FullScreen" />
+        <activity
+            android:name=".HistorySingleActivity"
+            android:theme="@style/AppTheme.FullScreen" />
         <activity
             android:name=".SplashScreen"
             android:theme="@style/AppTheme.FullScreen">
@@ -58,12 +62,14 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
         </activity>
-        <activity android:name=".VerifyPhoneActivity"
-            android:theme="@style/AppTheme.FullScreen"/>
-        <activity android:name=".RegisterActivity"
-                  android:theme="@style/AppTheme.FullScreen"/>
+        <activity
+            android:name=".VerifyPhoneActivity"
+            android:theme="@style/AppTheme.FullScreen" />
+        <activity
+            android:name=".RegisterActivity"
+            android:theme="@style/AppTheme.FullScreen" />
+
     </application>
 
 </manifest>
