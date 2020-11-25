@@ -1,5 +1,5 @@
 # jDriver
-Jano Driver App
+Driver App for Ride hailing Service
 
 This is an application created to serve as the driver side application for a Ride hailing service.
 You can find the customer side at https://github.com/AnwarTuha/jCustomer
